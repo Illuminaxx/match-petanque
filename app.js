@@ -78,6 +78,8 @@ document.addEventListener("DOMContentLoaded", function () {
   btnGenererMatchs.addEventListener("click", function () {
     genererMatchsAleatoires();
     afficherMatchs();
+
+    exportExcel.disabled = false;
   });
 
   function melangerArray(array) {
@@ -214,7 +216,8 @@ document.addEventListener("DOMContentLoaded", function () {
     XLSX.utils.book_append_sheet(wb, wsMatchs, "Matchs");
 
     // Écrire le workbook dans un fichier
-    XLSX.writeFile(wb, "tournoi.xlsx");
+    const fileName = "Tournoi-" + listeDesParticipants.length + " joueurs.xlsx";
+    XLSX.writeFile(wb, fileName);
   }
 
   exportExcel.addEventListener("click", () => {

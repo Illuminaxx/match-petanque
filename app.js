@@ -1,32 +1,33 @@
 document.addEventListener("DOMContentLoaded", function () {
-  const nombreParticipantsInput = document.getElementById("nombreParticipants");
-  const genererParticipantsButton = document.getElementById(
-    "genererParticipants"
+  const nombreParticipantsInput = document.querySelector("#nombreParticipants");
+  const genererParticipantsButton = document.querySelector(
+    "#genererParticipants"
   );
-  const exportExcel = document.getElementById("exportMatchs");
-  const listeParticipants = document.getElementById("listeParticipants");
-  const listeMatchs = document.getElementById("listeMatchs");
+  const exportExcel = document.querySelector("#exportMatchs");
+  const listeParticipants = document.querySelector("#listeParticipants");
+  const listeMatchs = document.querySelector("#listeMatchs");
+  const genererMatchsButton = document.querySelector("#genererMatchs");
+  const nombrePartiesInput = document.querySelector("#nombreParties");
   let matchs = [];
   let listeDesParticipants = [];
 
-  genererParticipantsButton.addEventListener("click", function () {
-    const nombreParticipants = parseInt(nombreParticipantsInput.value);
+  genererParticipantsButton.addEventListener("click", genererParticipants);
+
+  function genererParticipants() {
+    const nombreParticipants = parseInt(nombreParticipantsInput.value, 10);
 
     if (!isNaN(nombreParticipants) && nombreParticipants > 0) {
-      // Générer la liste de participants
       listeDesParticipants = genererListeParticipants(nombreParticipants);
 
-      // Réinitialiser les équipes et les paires jouées
       equipes = [];
 
-      // Afficher la liste de participants
       afficherListeParticipants(listeDesParticipants);
     } else {
-      alert(
+      displayErrorMessage(
         "Veuillez entrer un nombre valide de participants (supérieur à 0)."
       );
     }
-  });
+  }
 
   function genererListeParticipants(nombreParticipants) {
     const participants = [];
@@ -39,15 +40,14 @@ document.addEventListener("DOMContentLoaded", function () {
   function afficherListeParticipants(participants) {
     listeParticipants.innerHTML = "";
 
-    // Créer le titre "Participants"
-    const title = document.createElement("h2");
-    title.textContent = "Participants";
+    const existingTitle = document.querySelector(".columns h2");
+    if (!existingTitle) {
+      const title = document.createElement("h2");
+      title.textContent = "Participants";
+      const columnsDiv = document.querySelector(".columns");
 
-    // Trouver la div avec la classe "columns"
-    const columnsDiv = document.querySelector(".columns");
-
-    // Ajouter le titre en tant que premier enfant de la div
-    columnsDiv.insertBefore(title, columnsDiv.firstChild);
+      columnsDiv.insertBefore(title, columnsDiv.firstChild);
+    }
 
     participants.forEach((participant) => {
       const li = document.createElement("li");
@@ -55,13 +55,12 @@ document.addEventListener("DOMContentLoaded", function () {
       listeParticipants.appendChild(li);
     });
 
-    const genererMatchsButton = document.getElementById("genererMatchs");
     genererMatchsButton.style.display = "block";
   }
 
   function genererEquipes() {
     let participantsMelanges = melangerArray([...listeDesParticipants]);
-    equipes = []; // Réinitialisez les équipes
+    equipes = [];
 
     for (let i = 0; i < participantsMelanges.length; i += 2) {
       let joueur1 = participantsMelanges[i];
@@ -72,12 +71,14 @@ document.addEventListener("DOMContentLoaded", function () {
     return equipes;
   }
 
-  // Vous pouvez ajouter une fonction pour générer des matchs aléatoires, sauvegarder les scores, etc.
-  const btnGenererMatchs = document.getElementById("genererMatchs");
+  genererMatchsButton.addEventListener("click", function () {
+    const nombreParties = parseInt(nombrePartiesInput.value);
+    listeMatchs.innerHTML = "";
 
-  btnGenererMatchs.addEventListener("click", function () {
-    genererMatchsAleatoires();
-    afficherMatchs();
+    for (let i = 0; i < nombreParties; i++) {
+      genererMatchsAleatoires();
+      afficherMatchs(i + 1);
+    }
 
     exportExcel.disabled = false;
   });
@@ -85,59 +86,67 @@ document.addEventListener("DOMContentLoaded", function () {
   function melangerArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [array[i], array[j]] = [array[j], array[i]]; // échange les éléments
+      [array[i], array[j]] = [array[j], array[i]];
     }
     return array;
   }
 
   function genererMatchsAleatoires() {
-    genererEquipes();
+    let equipes = genererEquipes();
     let equipesMelanges = melangerArray([...equipes]);
-
-    // Réinitialisez les matchs
+    matchs = [];
 
     for (let i = 0; i < equipesMelanges.length; i += 2) {
-      if (equipesMelanges[i + 1]) {
+      let equipe1 = equipesMelanges[i];
+      let equipe2 = equipesMelanges[i + 1];
+
+      if (equipe2 && !equipe1.some((player) => equipe2.includes(player))) {
         matchs.push({
-          equipes: [equipesMelanges[i], equipesMelanges[i + 1]],
-          vainqueur: null, // Initialisez les scores à 0
-        });
-      } else {
-        // Si le nombre de participants est impair, le dernier n'a pas de match
-        matchs.push({
-          equipes: [equipesMelanges[i]],
+          equipes: [equipe1.join(" & "), equipe2.join(" & ")],
           vainqueur: null,
         });
+      }
+    }
+
+    let joueursPresents = [];
+    matchs.forEach((match) => {
+      let joueurs = match.equipes.flatMap((equipe) => equipe.split(" & "));
+      joueursPresents.push(...joueurs);
+    });
+
+    let joueursManquants = listeDesParticipants.filter(
+      (joueur) => !joueursPresents.includes(joueur)
+    );
+
+    while (joueursManquants.length > 0) {
+      let joueurA = joueursManquants.pop();
+      let joueurB = joueursManquants.pop();
+
+      for (let match of matchs) {
+        if (match.equipes[0].split(" & ").length === 2) {
+          match.equipes[0] += " & " + joueurA;
+          match.equipes[1] += " & " + joueurB;
+          break;
+        }
       }
     }
 
     return matchs;
   }
 
-  function afficherMatchs() {
-    listeMatchs.innerHTML = "";
-
-    // Créer le titre "Liste des matchs"
-    const title = document.createElement("h2");
-    title.textContent = "Liste des matchs";
-
-    // Trouver la div avec la classe "columns"
-    const matchesDiv = document.querySelector(".matches");
-
-    // Ajouter le titre en tant que premier enfant de la div
-    matchesDiv.insertBefore(title, matchesDiv.firstChild);
+  function afficherMatchs(partieNum) {
+    const partieTitle = document.createElement("h2");
+    partieTitle.textContent = "Partie " + partieNum;
+    listeMatchs.appendChild(partieTitle);
 
     matchs.forEach((match, index) => {
-      // Création de la card
       let card = document.createElement("div");
       card.className = "card";
 
-      // Titre du match
       let title = document.createElement("h3");
       title.textContent = "Match " + (index + 1);
       card.appendChild(title);
 
-      // Équipe 1
       let equipe1 = document.createElement("span");
       equipe1.textContent = match.equipes[0];
       card.appendChild(equipe1);
@@ -147,47 +156,27 @@ document.addEventListener("DOMContentLoaded", function () {
         vs.textContent = " vs ";
         card.appendChild(vs);
 
-        // Équipe 2
         let equipe2 = document.createElement("span");
         equipe2.textContent = match.equipes[1];
         card.appendChild(equipe2);
       }
 
-      // Ajout de la card à la liste des matchs
       listeMatchs.appendChild(card);
     });
   }
 
   function exportToExcel() {
-    // Créer un nouveau workbook
+    k;
     const wb = XLSX.utils.book_new();
 
-    // Convertir les participants en un tableau 2D pour Excel
     const participantsData = Array.from(
       document.querySelectorAll("#listeParticipants li")
     ).map((li) => [li.textContent]);
 
-    // Convertir les matchs en un tableau 2D pour Excel
-    const matchsData = Array.from(
-      document.querySelectorAll("#listeMatchs .card")
-    ).map((card) => {
-      const teams = card.querySelectorAll("span");
-      return [
-        teams[0].textContent,
-        teams.length > 1 ? teams[1].textContent : "",
-        teams[2].textContent,
-      ];
-    });
-
-    // Créer des feuilles à partir des données
     const wsParticipants = XLSX.utils.aoa_to_sheet(participantsData);
-    const wsMatchs = XLSX.utils.aoa_to_sheet(matchsData);
-
-    // Définir la largeur des colonnes pour les participants et les matchs
     wsParticipants["!cols"] = [{ wch: 30 }];
-    wsMatchs["!cols"] = [{ wch: 30 }, { wch: 30 }, { wch: 30 }];
+    XLSX.utils.book_append_sheet(wb, wsParticipants, "Participants");
 
-    // Style de bordure
     const borderStyle = {
       top: { style: "thin" },
       bottom: { style: "thin" },
@@ -195,27 +184,50 @@ document.addEventListener("DOMContentLoaded", function () {
       right: { style: "thin" },
     };
 
-    // Appliquer le style de bordure et mettre en gras les titres des colonnes
-    for (let col of ["A", "B", "C"]) {
-      if (wsMatchs[col + "1"]) {
-        wsMatchs[col + "1"].s = { border: borderStyle, font: { bold: true } };
-      }
-    }
+    const allMatchs = Array.from(
+      document.querySelectorAll("#listeMatchs .card")
+    ).map((card) => {
+      const teams = card.querySelectorAll("span");
+      return [
+        teams[0].textContent,
+        teams.length > 1 ? teams[1].textContent : "",
+        teams[2] ? teams[2].textContent : "",
+      ];
+    });
 
-    // Appliquer le style de bordure aux cellules des matchs
-    for (let i = 2; i <= matchsData.length + 1; i++) {
+    let nombreDeParties = parseInt(
+      document.querySelector("nombreParties").value
+    );
+    let matchsParPartie = allMatchs.length / nombreDeParties;
+
+    for (let partie = 1; partie <= nombreDeParties; partie++) {
+      const matchsData = allMatchs.slice(
+        (partie - 1) * matchsParPartie,
+        partie * matchsParPartie
+      );
+      const wsMatchs = XLSX.utils.aoa_to_sheet(matchsData);
+      wsMatchs["!cols"] = [{ wch: 30 }, { wch: 30 }, { wch: 30 }];
+
       for (let col of ["A", "B", "C"]) {
-        if (wsMatchs[col + i]) {
-          wsMatchs[col + i].s = { border: borderStyle };
+        if (wsMatchs[col + "1"]) {
+          wsMatchs[col + "1"].s = {
+            border: borderStyle,
+            font: { bold: true },
+          };
         }
       }
+
+      for (let i = 2; i <= matchsData.length + 1; i++) {
+        for (let col of ["A", "B", "C"]) {
+          if (wsMatchs[col + i]) {
+            wsMatchs[col + i].s = { border: borderStyle };
+          }
+        }
+      }
+
+      XLSX.utils.book_append_sheet(wb, wsMatchs, "Partie " + partie);
     }
 
-    // Ajouter les feuilles au workbook
-    XLSX.utils.book_append_sheet(wb, wsParticipants, "Participants");
-    XLSX.utils.book_append_sheet(wb, wsMatchs, "Matchs");
-
-    // Écrire le workbook dans un fichier
     const fileName = "Tournoi-" + listeDesParticipants.length + " joueurs.xlsx";
     XLSX.writeFile(wb, fileName);
   }

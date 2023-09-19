@@ -53,3 +53,7 @@ function genererMatchsAleatoires() {
       matchs.push({
         equipes: [equipesMelanges[
 ```
+
+### Deployment status 
+
+[![Netlify Status](https://api.netlify.com/api/v1/badges/53ba2eff-9c0f-4afd-9270-4f4bde182a67/deploy-status)](https://app.netlify.com/sites/petanque-matchs/deploys)

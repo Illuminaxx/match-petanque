@@ -166,7 +166,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function exportToExcel() {
-    k;
+  
     const wb = XLSX.utils.book_new();
 
     const participantsData = Array.from(

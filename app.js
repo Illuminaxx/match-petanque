@@ -166,7 +166,6 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function exportToExcel() {
-  
     const wb = XLSX.utils.book_new();
 
     const participantsData = Array.from(
@@ -196,7 +195,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     let nombreDeParties = parseInt(
-      document.querySelector("nombreParties").value
+      document.querySelector("#nombreParties").value
     );
     let matchsParPartie = allMatchs.length / nombreDeParties;
 

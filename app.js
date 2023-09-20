@@ -96,11 +96,21 @@ document.addEventListener("DOMContentLoaded", function () {
     let equipesMelanges = melangerArray([...equipes]);
     matchs = [];
 
+    let joueursAssocies = {};
+
     for (let i = 0; i < equipesMelanges.length; i += 2) {
       let equipe1 = equipesMelanges[i];
       let equipe2 = equipesMelanges[i + 1];
 
       if (equipe2 && !equipe1.some((player) => equipe2.includes(player))) {
+        if (equipe1.length === 3) {
+          let key = [...equipe1].sort().join(",");
+          if (joueursAssocies[key]) {
+            return genererMatchsAleatoires();
+          }
+          joueursAssocies[key] = true;
+        }
+
         matchs.push({
           equipes: [equipe1.join(" & "), equipe2.join(" & ")],
           vainqueur: null,
@@ -139,8 +149,11 @@ document.addEventListener("DOMContentLoaded", function () {
     partieTitle.textContent = "Partie " + partieNum;
     listeMatchs.appendChild(partieTitle);
 
+    console.log("Affichage des matchs:", matchs);
+
     matchs.forEach((match, index) => {
-      let card = document.createElement("div");
+      console.log("match:", match);
+      let card = document.createElement("li");
       card.className = "card";
 
       let title = document.createElement("h3");
@@ -154,6 +167,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if (match.equipes[1]) {
         let vs = document.createElement("span");
         vs.textContent = " vs ";
+        vs.classList.add("versus");
         card.appendChild(vs);
 
         let equipe2 = document.createElement("span");

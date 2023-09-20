@@ -15,23 +15,27 @@
     <main>
       <!-- Formulaire d'inscription des participants -->
       <form class="participantsForm">
-        <label for="nombreParticipants">Combien de participants ?</label>
-        <input
-          type="number"
-          id="nombreParticipants"
-          min="1"
-          max="60"
-          placeholder="Entrez le nombre de participants"
-        />
-        <label for="nombreParties">Nombre de parties :</label>
-        <input type="number" id="nombreParties" min="1" value="1" />
+        <div class="participantsForm_Inputs">
+          <label for="nombreParticipants">Combien de participants ?</label>
+          <input
+            type="number"
+            id="nombreParticipants"
+            min="1"
+            max="60"
+            placeholder="Entrez le nombre de participants"
+          />
+          <label for="nombreParties">Nombre de parties :</label>
+          <input type="number" id="nombreParties" min="1" value="1" />
+        </div>
 
-        <button id="genererParticipants" type="button">
-          Générer Participants
-        </button>
-        <button id="exportMatchs" type="button" disabled>
-          Exporter vers Excel
-        </button>
+        <div class="actions">
+          <button id="genererParticipants" type="button">
+            Générer Participants
+          </button>
+          <button id="exportMatchs" type="button" disabled>
+            Exporter vers Excel
+          </button>
+        </div>
       </form>
 
       <!-- Liste des participants inscrits -->

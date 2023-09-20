@@ -37,6 +37,13 @@ main {
 
 }
 
+.participantsForm .participantsForm_Inputs {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+
+}
+
 .participantsForm label {
     margin-top: 10px;
     margin-bottom: 15px;
@@ -116,6 +123,7 @@ label {
     list-style: none;
 }
 
+
 #listeParticipants li {
     flex: 1 1 calc(25% - 20px);
     margin: 10px;
@@ -123,14 +131,24 @@ label {
 }
 
 
-#listeMatchs {
+/* #listeMatchs {
     display: flex;
     align-content: center;
     flex-direction: column;
     flex-wrap: wrap;
     align-items: stretch;
     justify-content: center;
+} */
+
+#listeMatchs {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    grid-column-gap: 30px;
+    grid-row-gap: 10px;
+    transform: translate(-25px, 0px);
 }
+
 
 .columns {
     width: 100%;
@@ -178,12 +196,13 @@ label {
     color: #333;
 }
 
+
 .card {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     align-items: center;
-    padding: 10px;
+    padding: 15px 30px;
     border: 1px solid #ccc;
     margin-bottom: 10px;
     border-radius: 3px;
@@ -193,10 +212,16 @@ label {
 .card h3 {
     margin: 0;
     font-size: 16px;
+    padding-bottom: 5px;
     color: #555;
 }
 
 .card span {
     font-size: 14px;
     color: #444;
+    text-align: center;
+}
+
+.card .versus {
+    margin-block: 12px;
 }

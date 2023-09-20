@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function afficherListeParticipants(participants) {
-    listeParticipants.innerHTML = "";
+    listeParticipants.textContent = "";
 
     const existingTitle = document.querySelector(".columns h2");
     if (!existingTitle) {
@@ -58,7 +58,7 @@ document.addEventListener("DOMContentLoaded", function () {
     genererMatchsButton.style.display = "block";
   }
 
-  function genererEquipes() {
+  function genererEquipes(listeDesParticipants) {
     let participantsMelanges = melangerArray([...listeDesParticipants]);
     equipes = [];
 
@@ -73,7 +73,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   genererMatchsButton.addEventListener("click", function () {
     const nombreParties = parseInt(nombrePartiesInput.value);
-    listeMatchs.innerHTML = "";
+    listeMatchs.textContent = "";
 
     for (let i = 0; i < nombreParties; i++) {
       genererMatchsAleatoires();

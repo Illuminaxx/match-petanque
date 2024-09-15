@@ -1,58 +1,57 @@
 <!DOCTYPE html>
 <html lang="fr">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Concours de Pétanque</title>
-    <link rel="stylesheet" href="styles.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
-    <script defer src="app.js"></script>
-  </head>
-  <body>
-    <header>
-      <h1>Concours de Pétanque</h1>
-    </header>
-    <main>
-      <!-- Formulaire d'inscription des participants -->
-      <form class="participantsForm">
-        <div class="participantsForm_Inputs">
-          <label for="nombreParticipants">Combien de participants ?</label>
-          <input
-            type="number"
-            id="nombreParticipants"
-            min="1"
-            max="60"
-            placeholder="Entrez le nombre de participants"
-          />
-          <label for="nombreParties">Nombre de parties :</label>
-          <input type="number" id="nombreParties" min="1" value="1" />
-        </div>
 
-        <div class="actions">
-          <button id="genererParticipants" type="button">
-            Générer Participants
-          </button>
-          <button id="exportMatchs" type="button" disabled>
-            Exporter vers Excel
-          </button>
-        </div>
-      </form>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Concours de Pétanque</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+  <script defer src="app.js"></script>
+</head>
 
-      <!-- Liste des participants inscrits -->
-      <section class="columns">
-        <article class="column">
-          <ul id="listeParticipants"></ul>
-        </article>
-      </section>
-
-      <!-- Bouton pour générer les matchs -->
-      <button id="genererMatchs" style="display: none">
-        Générer les matchs
-      </button>
-
-      <div class="matches">
-        <ul id="listeMatchs"></ul>
+<body>
+  <header>
+    <h1>Concours de Pétanque</h1>
+  </header>
+  <main>
+    <!-- Formulaire d'inscription des participants -->
+    <form class="participantsForm">
+      <div class="participantsForm_Inputs">
+        <label for="nombreParticipants">Combien de participants ?</label>
+        <input type="number" id="nombreParticipants" min="1" max="60" placeholder="Entrez le nombre de participants" />
+        <label for="nombreParties">Nombre de parties :</label>
+        <input type="number" id="nombreParties" min="1" value="1" />
       </div>
-    </main>
-  </body>
+
+      <div class="actions">
+        <button id="genererParticipants" type="button">
+          Générer Participants
+        </button>
+        <button id="exportMatchs" type="button" disabled>
+          Exporter vers Excel
+        </button>
+      </div>
+      <div id="error-message" style="color: red;"></div>
+
+    </form>
+
+    <!-- Liste des participants inscrits -->
+    <section class="columns">
+      <article class="column">
+        <ul id="listeParticipants"></ul>
+      </article>
+    </section>
+
+    <!-- Bouton pour générer les matchs -->
+    <button id="genererMatchs" style="display: none">
+      Générer les matchs
+    </button>
+
+    <div class="matches">
+      <ul id="listeMatchs"></ul>
+    </div>
+  </main>
+</body>
+
 </html>

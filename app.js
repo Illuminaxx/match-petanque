@@ -92,12 +92,11 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function genererMatchsAleatoires() {
-    let equipes = genererEquipes();
+    let equipes = genererEquipes(listeDesParticipants);
     let equipesMelanges = melangerArray([...equipes]);
     matchs = [];
 
     let joueursAssocies = {};
-
     for (let i = 0; i < equipesMelanges.length; i += 2) {
       let equipe1 = equipesMelanges[i];
       let equipe2 = equipesMelanges[i + 1];

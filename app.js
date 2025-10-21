@@ -94,21 +94,17 @@ document.addEventListener("DOMContentLoaded", function () {
     const equipesMelangees = melangerArray([...equipes]);
     matchs = [];
 
-    const joueursAssocies = {};
-
+    // Pair teams for matches - no need for duplicate tracking as teams are unique per round
     for (let i = 0; i < equipesMelangees.length - 1; i += 2) {
       const equipe1 = equipesMelangees[i];
       const equipe2 = equipesMelangees[i + 1];
 
-      const key = [...equipe1].sort().join(",");
-      if (joueursAssocies[key]) continue;
-
-      matchs.push({
-        equipes: [equipe1.join(" & "), equipe2.join(" & ")],
-        vainqueur: null,
-      });
-
-      joueursAssocies[key] = true;
+      if (equipe1 && equipe2) {
+        matchs.push({
+          equipes: [equipe1.join(" & "), equipe2.join(" & ")],
+          vainqueur: null,
+        });
+      }
     }
 
     // Vérification des joueurs manquants
@@ -116,13 +112,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const joueursManquants = listeDesParticipants.filter((joueur) => !joueursPresents.includes(joueur));
 
     if (joueursManquants.length > 0) {
-      afficherMessageInfo("Certains joueurs n'ont pas été assignés à des matchs.");
+      afficherMessageInfo(`${joueursManquants.length} joueur(s) n'ont pas été assignés: ${joueursManquants.join(", ")}`);
     }
 
     return matchs;
   }
-
-  
 
   function afficherMatchs(partieNum) {
     const partieTitle = document.createElement("h2");
@@ -177,7 +171,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const allMatchs = Array.from(document.querySelectorAll("#listeMatchs .card")).map((card) => {
       const teams = card.querySelectorAll("span");
-      return [teams[0].textContent, teams.length > 1 ? teams[1].textContent : "", teams[2] ? teams[2].textContent : ""];
+      // teams[0] is equipe1, teams[1] is "vs", teams[2] is equipe2
+      return [
+        teams[0] ? teams[0].textContent : "",
+        teams[2] ? teams[2].textContent : "",
+        "" // Empty column for scores/results
+      ];
     });
 
     const nombreDeParties = parseInt(nombrePartiesInput.value, 10);

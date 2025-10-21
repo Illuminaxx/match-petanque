@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Application de gestion de tournoi de pétanque - Génération automatique de matchs et export Excel" />
   <title>Concours de Pétanque</title>
   <link rel="stylesheet" href="styles.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
@@ -12,46 +13,89 @@
 
 <body>
   <header>
-    <h1>Concours de Pétanque</h1>
+    <div class="header-content">
+      <h1>🎯 Concours de Pétanque</h1>
+      <p class="subtitle">Organisez votre tournoi facilement</p>
+    </div>
   </header>
+
   <main>
     <!-- Formulaire d'inscription des participants -->
-    <form class="participantsForm">
-      <div class="participantsForm_Inputs">
-        <label for="nombreParticipants">Combien de participants ?</label>
-        <input type="number" id="nombreParticipants" min="1" max="60" placeholder="Entrez le nombre de participants" />
-        <label for="nombreParties">Nombre de parties :</label>
-        <input type="number" id="nombreParties" min="1" value="1" />
-      </div>
+    <section class="form-section">
+      <form class="participantsForm" aria-label="Configuration du tournoi">
+        <div class="participantsForm_Inputs">
+          <div class="input-group">
+            <label for="nombreParticipants">Nombre de participants</label>
+            <input
+              type="number"
+              id="nombreParticipants"
+              min="1"
+              max="60"
+              required
+              aria-required="true"
+              aria-describedby="participants-help"
+              placeholder="Ex: 16"
+            />
+            <small id="participants-help" class="help-text">Entre 1 et 60 joueurs</small>
+          </div>
 
-      <div class="actions">
-        <button id="genererParticipants" type="button">
-          Générer Participants
-        </button>
-        <button id="exportMatchs" type="button" disabled>
-          Exporter vers Excel
-        </button>
-      </div>
-      <div id="error-message" style="color: red;"></div>
+          <div class="input-group">
+            <label for="nombreParties">Nombre de parties</label>
+            <input
+              type="number"
+              id="nombreParties"
+              min="1"
+              max="10"
+              value="1"
+              required
+              aria-required="true"
+              aria-describedby="parties-help"
+            />
+            <small id="parties-help" class="help-text">Entre 1 et 10 parties</small>
+          </div>
+        </div>
 
-    </form>
+        <div class="actions">
+          <button id="genererParticipants" type="button" class="btn btn-primary">
+            <span class="btn-text">Générer Participants</span>
+            <span class="btn-loader hidden"></span>
+          </button>
+          <button id="resetTournoi" type="button" class="btn btn-secondary hidden">
+            Réinitialiser
+          </button>
+          <button id="exportMatchs" type="button" class="btn btn-success hidden">
+            📊 Exporter vers Excel
+          </button>
+        </div>
+
+        <div id="error-message" class="error-message" role="alert" aria-live="polite"></div>
+      </form>
+    </section>
 
     <!-- Liste des participants inscrits -->
-    <section class="columns">
+    <section class="columns hidden" id="participantsSection">
+      <h2>Participants</h2>
       <article class="column">
-        <ul id="listeParticipants"></ul>
+        <ul id="listeParticipants" aria-label="Liste des participants"></ul>
       </article>
     </section>
 
     <!-- Bouton pour générer les matchs -->
-    <button id="genererMatchs" style="display: none">
-      Générer les matchs
-    </button>
-
-    <div class="matches">
-      <ul id="listeMatchs"></ul>
+    <div class="generate-matches-container">
+      <button id="genererMatchs" class="btn btn-primary btn-large hidden">
+        🎲 Générer les matchs
+      </button>
     </div>
+
+    <!-- Liste des matchs -->
+    <section class="matches hidden" id="matchesSection">
+      <ul id="listeMatchs" aria-label="Liste des matchs générés"></ul>
+    </section>
   </main>
+
+  <footer class="footer">
+    <p>Tournoi de Pétanque &copy; 2025</p>
+  </footer>
 </body>
 
 </html>

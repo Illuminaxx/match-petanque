@@ -28,6 +28,8 @@ document.addEventListener("DOMContentLoaded", function () {
   // State
   let matchs = [];
   let listeDesParticipants = [];
+  let equipesUtilisees = []; // Track used team pairs across all games
+  let toutesLesParties = []; // Store all games data
 
   // Event Listeners
   genererParticipantsButton.addEventListener("click", genererParticipants);
@@ -75,6 +77,11 @@ document.addEventListener("DOMContentLoaded", function () {
       participantsSection.classList.remove("hidden");
       resetButton.classList.remove("hidden");
 
+      // Update help text for max parties possible
+      const maxPartiesPossibles = calculerMaxParties(nombreParticipants);
+      const partiesHelp = document.querySelector("#parties-help");
+      partiesHelp.textContent = `Maximum ${maxPartiesPossibles} parties possibles avec rotation complète (pas de doublons d'équipes)`;
+
       // Save to localStorage
       sauvegarderDonnees();
 
@@ -107,20 +114,109 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   /**
-   * Generate teams from participants
+   * Create unique key for a team pair (sorted to avoid duplicates)
+   */
+  function creerCleEquipe(joueur1, joueur2) {
+    return [joueur1, joueur2].sort().join('|');
+  }
+
+  /**
+   * Check if a team pair has already been used
+   */
+  function equipeDejaUtilisee(joueur1, joueur2) {
+    const cle = creerCleEquipe(joueur1, joueur2);
+    return equipesUtilisees.includes(cle);
+  }
+
+  /**
+   * Mark a team pair as used
+   */
+  function marquerEquipeUtilisee(joueur1, joueur2) {
+    const cle = creerCleEquipe(joueur1, joueur2);
+    if (!equipesUtilisees.includes(cle)) {
+      equipesUtilisees.push(cle);
+    }
+  }
+
+  /**
+   * Calculate maximum number of unique team combinations possible
+   */
+  function calculerMaxParties(nombreParticipants) {
+    // For even number: each round uses n/2 unique pairs
+    // Total unique pairs possible = C(n,2) = n!/(2!(n-2)!) = n*(n-1)/2
+    // But we need n/2 pairs per round, so max rounds = n*(n-1)/(2*(n/2)) = (n-1)
+    if (nombreParticipants % 2 === 0) {
+      return nombreParticipants - 1;
+    } else {
+      // For odd number, one player sits out each round
+      return nombreParticipants;
+    }
+  }
+
+  /**
+   * Generate teams with Round-Robin rotation to avoid duplicate pairings
    */
   function genererEquipes(participants) {
-    const participantsMelanges = melangerArray([...participants]);
+    const n = participants.length;
     const equipes = [];
+    let participantsActifs = [...participants];
 
-    // Handle odd number by creating teams with remaining players
-    for (let i = 0; i < participantsMelanges.length; i += 2) {
-      if (i + 1 < participantsMelanges.length) {
-        equipes.push([participantsMelanges[i], participantsMelanges[i + 1]]);
-      } else {
-        // Odd player - notify user
-        showToast(`ℹ️ ${participantsMelanges[i]} sera de côté (nombre impair).`, 'info');
+    // Handle odd number - one player sits out
+    let joueurDeReserve = null;
+    if (n % 2 !== 0) {
+      // Rotate which player sits out based on number of games played
+      const indexReserve = toutesLesParties.length % n;
+      joueurDeReserve = participantsActifs[indexReserve];
+      participantsActifs = participantsActifs.filter((_, i) => i !== indexReserve);
+    }
+
+    // Try to create unique pairs
+    const pairesDisponibles = [];
+
+    // Generate all possible pairs that haven't been used yet
+    for (let i = 0; i < participantsActifs.length; i++) {
+      for (let j = i + 1; j < participantsActifs.length; j++) {
+        if (!equipeDejaUtilisee(participantsActifs[i], participantsActifs[j])) {
+          pairesDisponibles.push([participantsActifs[i], participantsActifs[j]]);
+        }
       }
+    }
+
+    // If we don't have enough unique pairs, we need to reset or inform user
+    if (pairesDisponibles.length < participantsActifs.length / 2) {
+      // Not enough unique pairs available - use greedy algorithm
+      const utilises = new Set();
+
+      for (const [joueur1, joueur2] of melangerArray(pairesDisponibles)) {
+        if (!utilises.has(joueur1) && !utilises.has(joueur2)) {
+          equipes.push([joueur1, joueur2]);
+          marquerEquipeUtilisee(joueur1, joueur2);
+          utilises.add(joueur1);
+          utilises.add(joueur2);
+        }
+
+        if (equipes.length >= participantsActifs.length / 2) break;
+      }
+    } else {
+      // We have enough pairs - use greedy matching
+      const utilises = new Set();
+      const pairsMelangees = melangerArray(pairesDisponibles);
+
+      for (const [joueur1, joueur2] of pairsMelangees) {
+        if (!utilises.has(joueur1) && !utilises.has(joueur2)) {
+          equipes.push([joueur1, joueur2]);
+          marquerEquipeUtilisee(joueur1, joueur2);
+          utilises.add(joueur1);
+          utilises.add(joueur2);
+        }
+
+        if (equipes.length >= participantsActifs.length / 2) break;
+      }
+    }
+
+    // Notify if someone sits out
+    if (joueurDeReserve) {
+      showToast(`ℹ️ ${joueurDeReserve} sera de côté pour cette partie (nombre impair).`, 'info');
     }
 
     return equipes;
@@ -131,6 +227,7 @@ document.addEventListener("DOMContentLoaded", function () {
    */
   function handleGenererMatchs() {
     const nombreParties = parseInt(nombrePartiesInput.value, 10);
+    const maxPartiesPossibles = calculerMaxParties(listeDesParticipants.length);
 
     if (isNaN(nombreParties) || nombreParties < CONSTANTS.MIN_PARTIES) {
       displayErrorMessage("Veuillez entrer un nombre valide de parties.");
@@ -142,6 +239,15 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
+    // Validate that we can create enough unique team combinations
+    if (nombreParties > maxPartiesPossibles) {
+      displayErrorMessage(
+        `Impossible de créer ${nombreParties} parties uniques avec ${listeDesParticipants.length} joueurs. ` +
+        `Maximum possible: ${maxPartiesPossibles} parties (rotation complète sans doublons d'équipes).`
+      );
+      return;
+    }
+
     // Clear previous error
     displayErrorMessage("");
 
@@ -149,12 +255,17 @@ document.addEventListener("DOMContentLoaded", function () {
     setLoadingState(genererMatchsButton, true);
 
     setTimeout(() => {
-      listeMatchs.textContent = ""; // Reset match list
+      // Reset previous matches and teams tracking
+      listeMatchs.textContent = "";
+      equipesUtilisees = [];
+      toutesLesParties = [];
       matchesSection.classList.remove("hidden");
 
+      // Generate all games
       for (let i = 0; i < nombreParties; i++) {
         genererMatchsAleatoires();
         afficherMatchs(i + 1);
+        toutesLesParties.push([...matchs]);
       }
 
       exportExcel.classList.remove("hidden");
@@ -164,7 +275,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
       setLoadingState(genererMatchsButton, false);
 
-      showToast(`✓ ${nombreParties} partie(s) générée(s) avec succès!`, 'success');
+      showToast(
+        `✓ ${nombreParties} partie(s) générée(s) avec rotation des partenaires (pas de doublons d'équipes) !`,
+        'success'
+      );
 
       // Scroll to matches
       matchesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -421,6 +535,8 @@ document.addEventListener("DOMContentLoaded", function () {
     // Reset state
     listeDesParticipants = [];
     matchs = [];
+    equipesUtilisees = [];
+    toutesLesParties = [];
 
     // Reset UI
     listeParticipants.textContent = "";

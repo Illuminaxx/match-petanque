@@ -154,63 +154,54 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   /**
-   * Generate teams with Round-Robin rotation to avoid duplicate pairings
+   * Generate teams with Round-Robin rotation using Circle Method (Berger Tables)
+   * This guarantees perfect matching for all players in every round
    */
-  function genererEquipes(participants) {
+  function genererEquipes(participants, numeroPartie = 0) {
     const n = participants.length;
-    const equipes = [];
     let participantsActifs = [...participants];
-
-    // Handle odd number - one player sits out
     let joueurDeReserve = null;
+
+    // Handle odd number - add a "bye" player
     if (n % 2 !== 0) {
-      // Rotate which player sits out based on number of games played
-      const indexReserve = toutesLesParties.length % n;
-      joueurDeReserve = participantsActifs[indexReserve];
-      participantsActifs = participantsActifs.filter((_, i) => i !== indexReserve);
+      participantsActifs.push('BYE'); // Placeholder for the player who sits out
     }
 
-    // Try to create unique pairs
-    const pairesDisponibles = [];
+    const totalJoueurs = participantsActifs.length; // Now always even
+    const equipes = [];
 
-    // Generate all possible pairs that haven't been used yet
-    for (let i = 0; i < participantsActifs.length; i++) {
-      for (let j = i + 1; j < participantsActifs.length; j++) {
-        if (!equipeDejaUtilisee(participantsActifs[i], participantsActifs[j])) {
-          pairesDisponibles.push([participantsActifs[i], participantsActifs[j]]);
-        }
-      }
+    // Circle Method (Berger Tables) for Round-Robin
+    // Fix first player (index 0), rotate all others
+    const positions = Array.from({ length: totalJoueurs }, (_, i) => i);
+
+    // Rotate positions based on round number
+    // Round 0: [0, 1, 2, 3, 4, 5, 6, 7]
+    // Round 1: [0, 7, 1, 2, 3, 4, 5, 6] (rotate right except position 0)
+    // Round 2: [0, 6, 7, 1, 2, 3, 4, 5] (rotate right except position 0)
+    for (let rotation = 0; rotation < numeroPartie; rotation++) {
+      // Rotate all positions except the first one
+      const last = positions.pop();
+      positions.splice(1, 0, last);
     }
 
-    // If we don't have enough unique pairs, we need to reset or inform user
-    if (pairesDisponibles.length < participantsActifs.length / 2) {
-      // Not enough unique pairs available - use greedy algorithm
-      const utilises = new Set();
+    // Create pairings: first half vs second half (reversed)
+    const halfSize = totalJoueurs / 2;
+    for (let i = 0; i < halfSize; i++) {
+      const joueur1Index = positions[i];
+      const joueur2Index = positions[totalJoueurs - 1 - i];
 
-      for (const [joueur1, joueur2] of melangerArray(pairesDisponibles)) {
-        if (!utilises.has(joueur1) && !utilises.has(joueur2)) {
-          equipes.push([joueur1, joueur2]);
-          marquerEquipeUtilisee(joueur1, joueur2);
-          utilises.add(joueur1);
-          utilises.add(joueur2);
-        }
+      const joueur1 = participantsActifs[joueur1Index];
+      const joueur2 = participantsActifs[joueur2Index];
 
-        if (equipes.length >= participantsActifs.length / 2) break;
-      }
-    } else {
-      // We have enough pairs - use greedy matching
-      const utilises = new Set();
-      const pairsMelangees = melangerArray(pairesDisponibles);
-
-      for (const [joueur1, joueur2] of pairsMelangees) {
-        if (!utilises.has(joueur1) && !utilises.has(joueur2)) {
-          equipes.push([joueur1, joueur2]);
-          marquerEquipeUtilisee(joueur1, joueur2);
-          utilises.add(joueur1);
-          utilises.add(joueur2);
-        }
-
-        if (equipes.length >= participantsActifs.length / 2) break;
+      // Check if one is BYE (player sits out)
+      if (joueur1 === 'BYE') {
+        joueurDeReserve = joueur2;
+      } else if (joueur2 === 'BYE') {
+        joueurDeReserve = joueur1;
+      } else {
+        // Both are real players, create team
+        equipes.push([joueur1, joueur2]);
+        marquerEquipeUtilisee(joueur1, joueur2);
       }
     }
 
@@ -263,7 +254,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       // Generate all games
       for (let i = 0; i < nombreParties; i++) {
-        genererMatchsAleatoires();
+        genererMatchsAleatoires(i); // Pass round number for Circle Method
         afficherMatchs(i + 1);
         toutesLesParties.push([...matchs]);
       }
@@ -297,14 +288,14 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   /**
-   * Generate random matches from teams
+   * Generate matches from teams for a specific round using Circle Method
    */
-  function genererMatchsAleatoires() {
-    const equipes = genererEquipes(listeDesParticipants);
+  function genererMatchsAleatoires(numeroPartie = 0) {
+    const equipes = genererEquipes(listeDesParticipants, numeroPartie);
     const equipesMelangees = melangerArray([...equipes]);
     matchs = [];
 
-    // Pair teams for matches - no need for duplicate tracking as teams are unique per round
+    // Pair teams for matches
     for (let i = 0; i < equipesMelangees.length - 1; i += 2) {
       const equipe1 = equipesMelangees[i];
       const equipe2 = equipesMelangees[i + 1];
@@ -315,14 +306,6 @@ document.addEventListener("DOMContentLoaded", function () {
           vainqueur: null,
         });
       }
-    }
-
-    // Vérification des joueurs manquants
-    const joueursPresents = matchs.flatMap((match) => match.equipes.flatMap((equipe) => equipe.split(" & ")));
-    const joueursManquants = listeDesParticipants.filter((joueur) => !joueursPresents.includes(joueur));
-
-    if (joueursManquants.length > 0) {
-      showToast(`ℹ️ ${joueursManquants.length} joueur(s) de côté: ${joueursManquants.join(", ")}`, 'info');
     }
 
     return matchs;
